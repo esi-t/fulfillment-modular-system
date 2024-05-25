@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+    php:
+        build:
+            context: .
+            dockerfile: ./docker/Dockerfile
+        container_name: laravel_php
+        volumes:
+            - ./:/var/www/html
+        expose:
+            - "9000"
+        networks:
+            - app_network
+
+    nginx:
+        image: nginx:latest
+        container_name: laravel_nginx
+        ports:
+            - "80:80"
+        volumes:
+            - ./:/var/www/html
+            - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+        depends_on:
+            - php
+        networks:
+            - app_network
+
+    mariadb:
+        image: mariadb:latest
+        container_name: laravel_mariadb
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: dailycore
+            MYSQL_USER: ehsan
+            MYSQL_PASSWORD: ehsan
+        ports:
+            - "3306:3306"
+        volumes:
+            # check
+            - mariadb_data:/var/lib/mysql
+        networks:
+            - app_network
+
+    redis:
+        image: redis:latest
+        container_name: laravel_redis
+        ports:
+            - "6379:6379"
+        networks:
+            - app_network
+
+    mongo:
+        image: mongo:latest
+        container_name: laravel_mongo
+        ports:
+            - "27017:27017"
+        volumes:
+            - mongo_data:/data/db
+        networks:
+            - app_network
+
+    rabbitmq:
+        image: rabbitmq:3.8-management
+        container_name: laravel_rabbitmq
+        ports:
+            - "5672:5672"
+            - "15672:15672"
+        networks:
+            - app_network
+
+volumes:
+    mariadb_data:
+    mongo_data:
+
+networks:
+    app_network:
+        driver: bridge
